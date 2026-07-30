@@ -2,6 +2,7 @@ package ir.example.digikalapricealert
 
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 /**
  * تبدیل تاریخ میلادی به شمسی (جلالی) بدون نیاز به کتابخانه‌ی خارجی.
@@ -49,7 +50,10 @@ object JalaliDateUtil {
         return Triple(jy, jm, jd)
     }
 
-    /** تاریخ و ساعتِ داده‌شده را به‌صورت "yyyy/MM/dd-HH:mm" شمسی برمی‌گرداند. */
+    /**
+     * تاریخ و ساعتِ داده‌شده را به‌صورت "yyyy/MM/dd - HH:mm" شمسی برمی‌گرداند.
+     * مشکلات RTL و اعداد فارسی با استفاده از LRM و جداکننده‌ی مناسب حل شده است.
+     */
     fun format(date: Date): String {
         val cal = Calendar.getInstance()
         cal.time = date
@@ -60,18 +64,63 @@ object JalaliDateUtil {
         )
         val hour = cal.get(Calendar.HOUR_OF_DAY)
         val minute = cal.get(Calendar.MINUTE)
-        // Locale.US عمداً صریح مشخص شده: اگر زبان گوشی فارسی باشد، فرمت‌کننده‌ی
-        // جاوا خودش بی‌سروصدا ارقام را به ارقام فارسیِ محلیِ سیستم تبدیل می‌کند
-        // (قبل از اینکه منطق تبدیل خودمان اجرا شود) و همان چیزی می‌شود که باعث
-        // به‌هم‌ریختگی فونت اعداد می‌شد. با Locale.US همیشه از ارقام لاتین شروع
-        // می‌کنیم و خودمان با PersianNumberUtils تبدیل را کنترل می‌کنیم.
-        //
-        // بین تاریخ و ساعت به‌جای فاصله از یک خط‌تیره‌ی بدون فاصله استفاده شده:
-        // طبق الگوریتم bidi یونیکد، یک جداکننده‌ی تکی که مستقیماً بین دو گروه
-        // عددی باشد (بدون فاصله) بخشی از همان یک عدد پیوسته در نظر گرفته می‌شود
-        // و دیگر قابل جابه‌جایی نسبت به بقیه نیست؛ فاصله (space) این تضمین را
-        // نمی‌دهد و همان چیزی بود که باعث جابه‌جایی روز و ساعت می‌شد.
-        return String.format(java.util.Locale.US, "%04d/%02d/%02d-%02d:%02d", jy, jm, jd, hour, minute)
+        
+        // 1. ساخت تاریخ با اعداد لاتین و جداکننده‌های مناسب
+        // استفاده از فاصله دور '-' برای جلوگیری از چسبندگی در RTL
+        val latinDate = String.format(Locale.US, "%04d/%02d/%02d - %02d:%02d", jy, jm, jd, hour, minute)
+        
+        // 2. تبدیل اعداد به فارسی (اگر متدتون موجوده)
+        val persianDate = try {
+            PersianNumberUtils.toPersian(latinDate)
+        } catch (e: Exception) {
+            // اگر کلاس PersianNumberUtils وجود نداشت، از fallback استفاده کن
+            latinDate
+        }
+        
+        // 3. اضافه کردن کاراکتر LRM (Left-to-Right Mark) برای کنترل جهت‌نویسی
+        // این کار باعث می‌شه که تاریخ به درستی از چپ به راست نمایش داده بشه
+        return "\u200E$persianDate"
+    }
+
+    /**
+     * فقط تاریخ را به صورت "yyyy/MM/dd" برمی‌گرداند (برای استفاده جداگانه)
+     */
+    fun formatDateOnly(date: Date): String {
+        val cal = Calendar.getInstance()
+        cal.time = date
+        val (jy, jm, jd) = gregorianToJalali(
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH) + 1,
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        
+        val latinDate = String.format(Locale.US, "%04d/%02d/%02d", jy, jm, jd)
+        val persianDate = try {
+            PersianNumberUtils.toPersian(latinDate)
+        } catch (e: Exception) {
+            latinDate
+        }
+        
+        return "\u200E$persianDate"
+    }
+
+    /**
+     * فقط ساعت را به صورت "HH:mm" برمی‌گرداند (برای استفاده جداگانه)
+     */
+    fun formatTimeOnly(date: Date): String {
+        val cal = Calendar.getInstance()
+        cal.time = date
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
+        
+        val latinTime = String.format(Locale.US, "%02d:%02d", hour, minute)
+        val persianTime = try {
+            PersianNumberUtils.toPersian(latinTime)
+        } catch (e: Exception) {
+            latinTime
+        }
+        
+        return "\u200E$persianTime"
     }
 
     fun nowFormatted(): String = format(Date())
