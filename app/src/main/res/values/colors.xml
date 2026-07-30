@@ -1,0 +1,13 @@
+<resources>
+    <color name="primary">#EF394E</color>
+    <color name="primary_dark">#C7203A</color>
+    <color name="accent">#0DAB76</color>
+    <color name="background">#F5F5F5</color>
+    <color name="white">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+    <color name="card_background">#EAF4FF</color>
+    <color name="history_row_background">#F0F5EA</color>
+    <color name="price_old">#D32F2F</color>
+    <color name="price_new">#2E7D32</color>
+</resources>
