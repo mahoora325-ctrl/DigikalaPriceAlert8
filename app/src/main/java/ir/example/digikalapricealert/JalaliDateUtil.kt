@@ -13,6 +13,9 @@ object JalaliDateUtil {
     private val gDaysInMonth = intArrayOf(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
     private val jDaysInMonth = intArrayOf(31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29)
 
+    // اعداد فارسی برای تبدیل
+    private val persianDigits = arrayOf('۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹')
+
     private fun isGregorianLeap(year: Int): Boolean =
         (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
 
@@ -51,6 +54,17 @@ object JalaliDateUtil {
     }
 
     /**
+     * تبدیل اعداد لاتین به فارسی
+     */
+    private fun toPersianDigits(text: String): String {
+        var result = text
+        for (i in 0..9) {
+            result = result.replace(i.toString(), persianDigits[i].toString())
+        }
+        return result
+    }
+
+    /**
      * تاریخ و ساعتِ داده‌شده را به‌صورت "yyyy/MM/dd - HH:mm" شمسی برمی‌گرداند.
      * مشکلات RTL و اعداد فارسی با استفاده از LRM و جداکننده‌ی مناسب حل شده است.
      */
@@ -65,20 +79,13 @@ object JalaliDateUtil {
         val hour = cal.get(Calendar.HOUR_OF_DAY)
         val minute = cal.get(Calendar.MINUTE)
         
-        // 1. ساخت تاریخ با اعداد لاتین و جداکننده‌های مناسب
-        // استفاده از فاصله دور '-' برای جلوگیری از چسبندگی در RTL
+        // ساخت تاریخ با اعداد لاتین و جداکننده‌های مناسب
         val latinDate = String.format(Locale.US, "%04d/%02d/%02d - %02d:%02d", jy, jm, jd, hour, minute)
         
-        // 2. تبدیل اعداد به فارسی (اگر متدتون موجوده)
-        val persianDate = try {
-            PersianNumberUtils.toPersian(latinDate)
-        } catch (e: Exception) {
-            // اگر کلاس PersianNumberUtils وجود نداشت، از fallback استفاده کن
-            latinDate
-        }
+        // تبدیل اعداد به فارسی
+        val persianDate = toPersianDigits(latinDate)
         
-        // 3. اضافه کردن کاراکتر LRM (Left-to-Right Mark) برای کنترل جهت‌نویسی
-        // این کار باعث می‌شه که تاریخ به درستی از چپ به راست نمایش داده بشه
+        // اضافه کردن کاراکتر LRM (Left-to-Right Mark) برای کنترل جهت‌نویسی
         return "\u200E$persianDate"
     }
 
@@ -95,11 +102,7 @@ object JalaliDateUtil {
         )
         
         val latinDate = String.format(Locale.US, "%04d/%02d/%02d", jy, jm, jd)
-        val persianDate = try {
-            PersianNumberUtils.toPersian(latinDate)
-        } catch (e: Exception) {
-            latinDate
-        }
+        val persianDate = toPersianDigits(latinDate)
         
         return "\u200E$persianDate"
     }
@@ -114,11 +117,7 @@ object JalaliDateUtil {
         val minute = cal.get(Calendar.MINUTE)
         
         val latinTime = String.format(Locale.US, "%02d:%02d", hour, minute)
-        val persianTime = try {
-            PersianNumberUtils.toPersian(latinTime)
-        } catch (e: Exception) {
-            latinTime
-        }
+        val persianTime = toPersianDigits(latinTime)
         
         return "\u200E$persianTime"
     }
