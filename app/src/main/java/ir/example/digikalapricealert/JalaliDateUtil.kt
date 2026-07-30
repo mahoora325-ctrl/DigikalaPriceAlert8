@@ -49,24 +49,30 @@ object JalaliDateUtil {
         return Triple(jy, jm, jd)
     }
 
-    /** تاریخ و ساعتِ داده‌شده را به‌صورت "yyyy/MM/dd HH:mm" شمسی برمی‌گرداند. */
+    /** تاریخ و ساعتِ داده‌شده را به‌صورت "yyyy/MM/dd-HH:mm" شمسی برمی‌گرداند. */
     fun format(date: Date): String {
-    val cal = Calendar.getInstance()
-    cal.time = date
-    val (jy, jm, jd) = gregorianToJalali(
-        cal.get(Calendar.YEAR),
-        cal.get(Calendar.MONTH) + 1,
-        cal.get(Calendar.DAY_OF_MONTH)
-    )
-    val hour = cal.get(Calendar.HOUR_OF_DAY)
-    val minute = cal.get(Calendar.MINUTE)
-    
-    // ساخت تاریخ با اعداد لاتین
-    val latinDate = String.format(Locale.US, "%04d/%02d/%02d-%02d:%02d", jy, jm, jd, hour, minute)
-    
-    // تبدیل به فارسی (اگر متدتون این اسم هست)
-    return PersianNumberUtils.toPersian(latinDate)
-}
+        val cal = Calendar.getInstance()
+        cal.time = date
+        val (jy, jm, jd) = gregorianToJalali(
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH) + 1,
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
+        // Locale.US عمداً صریح مشخص شده: اگر زبان گوشی فارسی باشد، فرمت‌کننده‌ی
+        // جاوا خودش بی‌سروصدا ارقام را به ارقام فارسیِ محلیِ سیستم تبدیل می‌کند
+        // (قبل از اینکه منطق تبدیل خودمان اجرا شود) و همان چیزی می‌شود که باعث
+        // به‌هم‌ریختگی فونت اعداد می‌شد. با Locale.US همیشه از ارقام لاتین شروع
+        // می‌کنیم و خودمان با PersianNumberUtils تبدیل را کنترل می‌کنیم.
+        //
+        // بین تاریخ و ساعت به‌جای فاصله از یک خط‌تیره‌ی بدون فاصله استفاده شده:
+        // طبق الگوریتم bidi یونیکد، یک جداکننده‌ی تکی که مستقیماً بین دو گروه
+        // عددی باشد (بدون فاصله) بخشی از همان یک عدد پیوسته در نظر گرفته می‌شود
+        // و دیگر قابل جابه‌جایی نسبت به بقیه نیست؛ فاصله (space) این تضمین را
+        // نمی‌دهد و همان چیزی بود که باعث جابه‌جایی روز و ساعت می‌شد.
+        return String.format(java.util.Locale.US, "%04d/%02d/%02d-%02d:%02d", jy, jm, jd, hour, minute)
+    }
 
     fun nowFormatted(): String = format(Date())
 }
