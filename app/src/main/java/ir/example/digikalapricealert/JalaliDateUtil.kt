@@ -3,6 +3,7 @@ package ir.example.digikalapricealert
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.text.SimpleDateFormat
 
 /**
  * تبدیل تاریخ میلادی به شمسی (جلالی) بدون نیاز به کتابخانه‌ی خارجی.
@@ -66,31 +67,39 @@ object JalaliDateUtil {
 
     /**
      * تاریخ و ساعتِ داده‌شده را به‌صورت "yyyy/MM/dd - HH:mm" شمسی برمی‌گرداند.
-     * مشکلات RTL و اعداد فارسی با استفاده از LRM و جداکننده‌ی مناسب حل شده است.
      */
     fun format(date: Date): String {
         val cal = Calendar.getInstance()
         cal.time = date
+        
+        // استخراج سال، ماه، روز
         val (jy, jm, jd) = gregorianToJalali(
             cal.get(Calendar.YEAR),
             cal.get(Calendar.MONTH) + 1,
             cal.get(Calendar.DAY_OF_MONTH)
         )
-        val hour = cal.get(Calendar.HOUR_OF_DAY)
-        val minute = cal.get(Calendar.MINUTE)
         
-        // ساخت تاریخ با اعداد لاتین و جداکننده‌های مناسب
+        // استخراج ساعت و دقیقه (با بررسی معتبر بودن)
+        var hour = cal.get(Calendar.HOUR_OF_DAY)
+        var minute = cal.get(Calendar.MINUTE)
+        
+        // اگر دقیقه نامعتبر بود (بیشتر از ۵۹)، تصحیح کن
+        if (minute > 59) {
+            minute = 0
+        }
+        
+        // ساخت تاریخ با اعداد لاتین
         val latinDate = String.format(Locale.US, "%04d/%02d/%02d - %02d:%02d", jy, jm, jd, hour, minute)
         
         // تبدیل اعداد به فارسی
         val persianDate = toPersianDigits(latinDate)
         
-        // اضافه کردن کاراکتر LRM (Left-to-Right Mark) برای کنترل جهت‌نویسی
+        // اضافه کردن LRM برای کنترل RTL
         return "\u200E$persianDate"
     }
 
     /**
-     * فقط تاریخ را به صورت "yyyy/MM/dd" برمی‌گرداند (برای استفاده جداگانه)
+     * فقط تاریخ را به صورت "yyyy/MM/dd" برمی‌گرداند
      */
     fun formatDateOnly(date: Date): String {
         val cal = Calendar.getInstance()
@@ -108,13 +117,18 @@ object JalaliDateUtil {
     }
 
     /**
-     * فقط ساعت را به صورت "HH:mm" برمی‌گرداند (برای استفاده جداگانه)
+     * فقط ساعت را به صورت "HH:mm" برمی‌گرداند
      */
     fun formatTimeOnly(date: Date): String {
         val cal = Calendar.getInstance()
         cal.time = date
-        val hour = cal.get(Calendar.HOUR_OF_DAY)
-        val minute = cal.get(Calendar.MINUTE)
+        var hour = cal.get(Calendar.HOUR_OF_DAY)
+        var minute = cal.get(Calendar.MINUTE)
+        
+        // تصحیح دقیقه اگر نامعتبر بود
+        if (minute > 59) {
+            minute = 0
+        }
         
         val latinTime = String.format(Locale.US, "%02d:%02d", hour, minute)
         val persianTime = toPersianDigits(latinTime)
