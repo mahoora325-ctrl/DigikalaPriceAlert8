@@ -16,8 +16,9 @@
              همیشه راست‌به‌چپ نمایش داده شود تا ترتیب نمایش (مثل تاریخچه‌ی
              قیمت) روی همه‌ی گوشی‌ها یکسان بماند. -->
         <item name="android:layoutDirection">rtl</item>
-        <!-- فونت طنین در کل برنامه -->
-        <item name="android:fontFamily">@font/tanin</item>
-        <item name="fontFamily">@font/tanin</item>
+        
+        <!-- تغییر فونت به Vazirmatn برای نمایش بهتر اعداد فارسی -->
+        <item name="android:fontFamily">@font/vazirmatn</item>
+        <item name="fontFamily">@font/vazirmatn</item>
     </style>
 </resources>
